@@ -1,16 +1,13 @@
 #!/usr/bin/env python
-
 import array
 import struct
 import random
 import sys
 
 
-
 DIM = 2
 DATA_MIN = 0
 DATA_MAX = 100
-
 
 def gen_data_uniform(n_data, output_f):
     data = array.array('f')
@@ -23,7 +20,6 @@ def gen_data_uniform(n_data, output_f):
     data.tofile(output_f)
 
 
-
 def gen_data_normal(n_data, output_f, cluster_num):
     data = array.array('f')
     count = 0
@@ -32,7 +28,7 @@ def gen_data_normal(n_data, output_f, cluster_num):
     perturbation = 0.05
 
     cluster_size = n_data / cluster_num
-        
+
     while count < n_data:
         start_p = []
         new_p = []
@@ -41,7 +37,6 @@ def gen_data_normal(n_data, output_f, cluster_num):
             new_p.append(0.0)
             data.append(start_p[d])
         count += 1
-        
 
         for i in range(int(random.gauss(cluster_size, 5.0))):
             for d in range(DIM):
@@ -50,17 +45,14 @@ def gen_data_normal(n_data, output_f, cluster_num):
             if random.random() < perturbation:
                 start_p = new_p
             count += 1
-            
 
             if count >= n_data:
                 break
-                                    
+
     data.tofile(output_f)
-    
 
 
 if __name__ == '__main__':
-    
     if len(sys.argv) < 4:
         print('{0} centroid <data size> <output file>'.format(sys.argv[0]))
         print('{0} data <data size> <output file> <cluster num>'.format(sys.argv[0]))
@@ -81,6 +73,4 @@ if __name__ == '__main__':
         cluster_num = int(sys.argv[4])
         gen_data_normal(n_data, output_f, cluster_num)
 
-
     output_f.close()
-            
