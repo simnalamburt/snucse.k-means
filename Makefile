@@ -31,6 +31,7 @@ run:
 	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024
 
 plot:
+	@cmp --silent result_seq.class result_pthread.class || echo "Test Failed"
 	./plot_data.py result centroid.point data.point result_seq.class result_seq.png
 	./plot_data.py result centroid.point data.point result_pthread.class result_pthread.png
 
