@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -Wextra -O3 -std=c++0x
+CXXFLAGS=-Wall -Wextra -O3 -std=c++0x -mmmx -msse -msse2 -msse3 -msse4.1 -msse4.2
 
 LIBS = -lrt
 LDFLAGS = ${LIBS}
