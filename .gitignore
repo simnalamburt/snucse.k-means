@@ -4,3 +4,4 @@ kmeans_seq
 *.point
 *.class
 task_*.std*
+result_*.png

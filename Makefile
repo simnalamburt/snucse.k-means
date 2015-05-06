@@ -20,7 +20,7 @@ run_all:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
 	thorq --add kmeans_seq centroid.point data.point result_seq.class final_centroid_seq.point 1024
-	thorq --add kmeans_pthread centroid.point data.point result_par.class final_centroid_par.point 1024
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024
 run_seq:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
@@ -28,9 +28,13 @@ run_seq:
 run:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
-	thorq --add kmeans_pthread centroid.point data.point result_par.class final_centroid_par.point 1024
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024
+
+plot:
+	./plot_data.py result centroid.point data.point result_seq.class result_seq.png
+	./plot_data.py result centroid.point data.point result_pthread.class result_pthread.png
 
 clean:
-	rm -f kmeans_seq kmeans_pthread kmeans_main.o kmeans_seq.o kmeans_pthread.o centroid.point data.point final_centroid.point result.class task*
+	rm -f kmeans_seq kmeans_pthread kmeans_main.o kmeans_seq.o kmeans_pthread.o centroid.point data.point final_centroid.point result.class task* result_seq.png result_pthread.png
 
 .PHONY: all seq pthread clean test
