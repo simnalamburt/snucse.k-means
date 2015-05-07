@@ -18,9 +18,13 @@
 unsigned int read_data(FILE* f, float** data_p);
 int timespec_subtract(struct timespec*, struct timespec*, struct timespec*);
 
+char** argv;
 
 int main(int argc, char** argv)
 {
+  ::argv = argv;
+
+
   int class_n, data_n, iteration_n;
   float *centroids, *data;
   int* partitioned;

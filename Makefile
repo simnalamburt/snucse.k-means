@@ -20,7 +20,7 @@ run_all:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
 	thorq --add kmeans_seq centroid.point data.point result_seq.class final_centroid_seq.point 1024
-	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 4
 run_seq:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
@@ -28,7 +28,7 @@ run_seq:
 run:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
-	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 4
 
 plot:
 	@cmp --silent result_seq.class result_pthread.class || echo "Test Failed"

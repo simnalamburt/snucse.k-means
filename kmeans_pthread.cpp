@@ -1,6 +1,7 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <iostream>
 #include <cstring>
 #include <pthread.h>
 #include "kmeans.h"
@@ -10,6 +11,8 @@ using std::pair;
 using std::numeric_limits;
 using std::for_each;
 using std::fill;
+using std::cout;
+using std::endl;
 
 typedef Point point_t;
 
@@ -43,10 +46,13 @@ void *per_thread(void *data) {
   return 0;
 }
 
+extern char **argv;
+
 void kmeans(const int iteration_n, const int class_n, const int data_n,
     point_t *const centroids, point_t *const data, int *const partitioned)
 {
-  const int thread_count = 4;
+  const int thread_count = atoi(argv[6]);
+  cout << "Thread: " << thread_count << endl;
 
   shared_context shared_ctxt;
   shared_ctxt.class_n = class_n;
