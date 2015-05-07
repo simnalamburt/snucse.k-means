@@ -20,7 +20,30 @@ run_all:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
 	thorq --add kmeans_seq centroid.point data.point result_seq.class final_centroid_seq.point 1024
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 1
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 2
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 3
 	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 4
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 5
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 6
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 7
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 8
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 9
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 10
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 11
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 12
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 13
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 14
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 15
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 16
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 17
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 18
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 19
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 20
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 21
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 22
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 23
+	thorq --add kmeans_pthread centroid.point data.point result_pthread.class final_centroid_par.point 1024 24
 run_seq:
 	./gen_data.py centroid 64 centroid.point
 	./gen_data.py data 65536 data.point 64
