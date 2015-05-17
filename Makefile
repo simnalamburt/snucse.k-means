@@ -1,7 +1,7 @@
 TARGET=kmeans_seq kmeans_pthread
 
 CPP=g++
-CPPFLAGS=-Wall -Wextra -O3 -std=c++0x -mmmx -msse -msse2 -msse3 -msse4.1 -msse4.2
+CPPFLAGS=-Wall -Wextra -O3 -std=c++0x
 LDFLAGS = -lrt
 
 all: $(TARGET)
