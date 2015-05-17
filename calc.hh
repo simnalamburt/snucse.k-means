@@ -105,8 +105,8 @@ void kmeans(
     check(clEnqueueWriteBuffer(cmdq, buffer_data, CL_FALSE, 0, size_data, data, 0, NULL, NULL));
 
     array<size_t, 1> global = {{ data_n }};
-    // TODO : Adjust local work size
-    check(clEnqueueNDRangeKernel(cmdq, kernel, 1, NULL, global.data(), NULL, 0, NULL, NULL));
+    array<size_t, 1> local = {{ 256 }};
+    check(clEnqueueNDRangeKernel(cmdq, kernel, 1, NULL, global.data(), local.data(), 0, NULL, NULL));
     check(clEnqueueReadBuffer(cmdq, buffer_table, CL_TRUE, 0, size_table, table, 0, NULL, NULL));
 
     // Update step
