@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
   clock_gettime(CLOCK_MONOTONIC, &start);
   // Run Kmeans algorithm
-  kmeans(iteration_n, class_n, data_n, (Point*)centroids, (Point*)data, partitioned);
+  kmeans(iteration_n, class_n, data_n, (point*)centroids, (point*)data, partitioned);
   clock_gettime(CLOCK_MONOTONIC, &end);
 
   timespec_subtract(&spent, &end, &start);
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
   if (argc > 4) {
     io_file = fopen(argv[4], "wb");
     fwrite(&class_n, sizeof(class_n), 1, io_file);
-    fwrite(centroids, sizeof(Point), class_n, io_file);
+    fwrite(centroids, sizeof(point), class_n, io_file);
     fclose(io_file);
   }
 

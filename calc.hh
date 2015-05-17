@@ -2,7 +2,6 @@
 #include <memory>
 #include <array>
 #include <vector>
-#include <limits>
 #include <thread>
 #include <cstring>
 #include <CL/cl.h>
@@ -12,15 +11,14 @@ namespace {
 
 using namespace std;
 
-struct point_t { float x, y; };
-typedef point_t Point;
+struct point { float x, y; };
 
 void check(cl_int);
 
 void kmeans(
     const int repeat,
     const int class_n, const int data_n,
-    point_t *const centroids, point_t *const data, int *const table)
+    point *const centroids, point *const data, int *const table)
 {
   const size_t size_centroids = class_n * sizeof *centroids;
   const size_t size_data = data_n * sizeof *data;
@@ -48,12 +46,12 @@ void kmeans(
   // Compile OpenCL kernel codes
   //
   auto code = R"(
-    typedef struct { float x, y; } point_t;
+    typedef struct { float x, y; } point;
 
     __kernel void calc(
           int class_n,
-          __global point_t *centroids,
-          __global point_t *data,
+          __global point *centroids,
+          __global point *data,
           __global int *table) {
       int i = get_global_id(0);
       float min_dist = 3.402823e+38; // Numeric limits

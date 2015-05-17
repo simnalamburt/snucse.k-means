@@ -1,16 +1,16 @@
 #include <stdlib.h>
 #include <float.h>
 
-struct Point { float x, y; };
+struct point { float x, y; };
 
-void kmeans(int iteration_n, int class_n, int data_n, Point* centroids, Point* data, int* partitioned)
+void kmeans(int iteration_n, int class_n, int data_n, point* centroids, point* data, int* partitioned)
 {
   // Loop indices for iteration, data and class
   int i, data_i, class_i;
   // Count number of data in each class
   int* count = (int*)malloc(sizeof(int) * class_n);
   // Temporal point value to calculate distance
-  Point t;
+  point t;
 
 
   // Iterate through number of interations
