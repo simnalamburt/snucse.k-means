@@ -6,12 +6,12 @@ LDFLAGS = -lrt
 
 all: $(TARGET)
 
-kmeans_seq: kmeans_seq.o kmeans_main.o
+kmeans_seq: kmeans_seq.o main.o
 	$(CPP) $^ -o $@ $(LDFLAGS)
 
 kmeans_pthread: LDFLAGS += -lpthread
 
-kmeans_pthread: kmeans_pthread.o kmeans_main.o
+kmeans_pthread: kmeans_pthread.o main.o
 	$(CPP) $^ -o $@ $(LDFLAGS)
 
 run_all: $(TARGET)
