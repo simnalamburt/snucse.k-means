@@ -1,17 +1,10 @@
-/*
-  Sequential implementation of KMeans
-*/
-
-#include "kmeans.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "kmeans.h"
 
 #define DATA_DIM 2
 #define DEFAULT_ITERATION 1024
-
-#define GET_TIME(T) __asm__ __volatile__ ("rdtsc\n" : "=A" (T))
 
 
 // Read data from file
