@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "kmeans.h"
+
+#ifdef Reference
+#include "calc_ref.hh"
+#else
+#include "calc.hh"
+#endif
 
 #define DATA_DIM 2
 #define DEFAULT_ITERATION 1024

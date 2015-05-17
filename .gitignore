@@ -1,5 +1,2 @@
-kmeans_pthread
-kmeans_seq
-*.o
 task_*.std*
 tmp/

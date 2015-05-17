@@ -2,13 +2,13 @@
 #include <limits>
 #include <thread>
 #include <cstring>
-#include "kmeans.h"
 
 using std::vector;
 using std::thread;
 using std::numeric_limits;
 
-typedef Point point_t;
+struct point_t { float x, y; };
+typedef point_t Point;
 
 class context {
   int class_n, data_n;
