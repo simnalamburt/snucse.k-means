@@ -114,7 +114,6 @@ void kmeans(
     vector<int> count(class_n);
 
     // Calculate mean value
-    // TODO : OpenCL
     for (int i = 0; i < data_n; ++i) {
       centroids[table[i]].x += data[i].x;
       centroids[table[i]].y += data[i].y;
