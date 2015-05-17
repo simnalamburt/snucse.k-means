@@ -13,11 +13,11 @@ typedef point_t Point;
 class context {
   int class_n, data_n;
   point_t *centroids, *data;
-  int *partitioned;
+  int *table;
 
 public:
-  context(int class_n, int data_n, point_t *centroids, point_t *data, int *partitioned) :
-    class_n(class_n), data_n(data_n), centroids(centroids), data(data), partitioned(partitioned) { }
+  context(int class_n, int data_n, point_t *centroids, point_t *data, int *table) :
+    class_n(class_n), data_n(data_n), centroids(centroids), data(data), table(table) { }
 
   void per_thread(int begin, int end) {
     for (int i = begin; i < end; ++i) {
@@ -27,7 +27,7 @@ public:
         const float y = data[i].y - centroids[j].y;
         const float dist = x*x + y*y;
         if (dist < min_dist) {
-          partitioned[i] = j;
+          table[i] = j;
           min_dist = dist;
         }
       }
@@ -35,13 +35,13 @@ public:
   }
 };
 
-void kmeans(const int iteration_n, const int class_n, const int data_n,
-    point_t *const centroids, point_t *const data, int *const partitioned)
+void kmeans(const int repeat, const int class_n, const int data_n,
+    point_t *const centroids, point_t *const data, int *const table)
 {
   const int thread_count = 4;
-  context ctxt(class_n, data_n, centroids, data, partitioned);
+  context ctxt(class_n, data_n, centroids, data, table);
 
-  for (int _ = 0; _ < iteration_n; ++_) {
+  for (int _ = 0; _ < repeat; ++_) {
     // Create threads
     vector<thread> threads;
     threads.reserve(thread_count);
@@ -59,9 +59,9 @@ void kmeans(const int iteration_n, const int class_n, const int data_n,
 
     // Calculate mean value
     for (int i = 0; i < data_n; ++i) {
-      centroids[partitioned[i]].x += data[i].x;
-      centroids[partitioned[i]].y += data[i].y;
-      ++count[partitioned[i]];
+      centroids[table[i]].x += data[i].x;
+      centroids[table[i]].y += data[i].y;
+      ++count[table[i]];
     }
 
     for (int i = 0; i < class_n; ++i) {
