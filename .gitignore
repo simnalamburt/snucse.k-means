@@ -1,7 +1,5 @@
 kmeans_pthread
 kmeans_seq
 *.o
-*.point
-*.class
 task_*.std*
-result_*.png
+tmp/
