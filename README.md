@@ -4,4 +4,5 @@ K-Means
 
 ### Branches
 * `pthread`: pthread를 쓴 병렬화
-* `master`: OpenCL을 쓴 병렬화
+* `opencl`: OpenCL을 쓴 병렬화
+* `master`: OpenMP을 쓴 병렬화
