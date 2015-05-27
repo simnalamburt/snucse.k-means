@@ -1,57 +1,47 @@
-#include <stdlib.h>
-#include <float.h>
+#include <vector>
+#include <limits>
+#include <cstring>
 
-struct point { float x, y; };
+namespace {
+  using namespace std;
 
-void kmeans(int iteration_n, int class_n, int data_n, point* centroids, point* data, int* partitioned)
-{
-  // Loop indices for iteration, data and class
-  int i, data_i, class_i;
-  // Count number of data in each class
-  int* count = (int*)malloc(sizeof(int) * class_n);
-  // Temporal point value to calculate distance
-  point t;
+  struct point { float x, y; };
 
-
-  // Iterate through number of interations
-  for (i = 0; i < iteration_n; i++) {
-
-    // Assignment step
-    for (data_i = 0; data_i < data_n; data_i++) {
-      float min_dist = DBL_MAX;
-
-      for (class_i = 0; class_i < class_n; class_i++) {
-        t.x = data[data_i].x - centroids[class_i].x;
-        t.y = data[data_i].y - centroids[class_i].y;
-
-        float dist = t.x * t.x + t.y * t.y;
-
-        if (dist < min_dist) {
-          partitioned[data_i] = class_i;
-          min_dist = dist;
+  void kmeans(
+      const int repeat,
+      const int class_n, const int data_n,
+      point *const centroids, point *const data, int *const table)
+  {
+    for (int _ = 0; _ < repeat; ++_) {
+      // Assignment step
+      for (int i = 0; i < data_n; ++i) {
+        auto min_dist = numeric_limits<float>::max();
+        for (int j = 0; j < class_n; ++j) {
+          const float x = data[i].x - centroids[j].x;
+          const float y = data[i].y - centroids[j].y;
+          const float dist = x*x + y*y;
+          if (dist < min_dist) {
+            table[i] = j;
+            min_dist = dist;
+          }
         }
       }
-    }
 
-    // Update step
-    // Clear sum buffer and class count
-    for (class_i = 0; class_i < class_n; class_i++) {
-      centroids[class_i].x = 0.0;
-      centroids[class_i].y = 0.0;
-      count[class_i] = 0;
-    }
+      // Update step
+      memset(centroids, 0, class_n * sizeof *centroids);
+      vector<int> count(class_n);
 
-    // Sum up and count data for each class
-    for (data_i = 0; data_i < data_n; data_i++) {
-      centroids[partitioned[data_i]].x += data[data_i].x;
-      centroids[partitioned[data_i]].y += data[data_i].y;
-      count[partitioned[data_i]]++;
-    }
+      // Calculate mean value
+      for (int i = 0; i < data_n; ++i) {
+        centroids[table[i]].x += data[i].x;
+        centroids[table[i]].y += data[i].y;
+        ++count[table[i]];
+      }
 
-    // Divide the sum with number of class for mean point
-    for (class_i = 0; class_i < class_n; class_i++) {
-      centroids[class_i].x /= count[class_i];
-      centroids[class_i].y /= count[class_i];
+      for (int i = 0; i < class_n; ++i) {
+        centroids[i].x /= count[i];
+        centroids[i].y /= count[i];
+      }
     }
   }
 }
