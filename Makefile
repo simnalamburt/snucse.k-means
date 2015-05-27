@@ -2,7 +2,7 @@ CPPFLAGS=-O3 -Wall -Wextra -std=c++0x
 LDFLAGS=-lrt
 
 all: main.cc
-	g++ $(CPPFLAGS)             $^ $(LDFLAGS) -o tmp/bin
+	g++ $(CPPFLAGS) -fopenmp    $^ $(LDFLAGS) -o tmp/bin
 	g++ $(CPPFLAGS) -DReference $^ $(LDFLAGS) -o tmp/bin.ref
 
 run_all:
