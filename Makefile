@@ -1,5 +1,5 @@
 CPPFLAGS=-O3 -Wall -Wextra -std=c++0x
-LDFLAGS=-lOpenCL -lrt
+LDFLAGS=-lrt
 
 all: main.cc
 	g++ $(CPPFLAGS)             $^ $(LDFLAGS) -o tmp/bin
