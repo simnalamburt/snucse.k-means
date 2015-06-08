@@ -1,71 +1,29 @@
-//
-// Skeletal codes
-//
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
 #include <vector>
 #include <limits>
 #include <cstring>
-
-namespace {
-  using namespace std;
-
-  struct point { float x, y; };
-
-  void kmeans(
-      const int repeat,
-      const int class_n, const int data_n,
-      point *const centroids, point *const data, int *const table)
-  {
-    for (int _ = 0; _ < repeat; ++_) {
-      // Assignment step
-      #pragma omp parallel for
-      for (int i = 0; i < data_n; ++i) {
-        auto min_dist = numeric_limits<float>::max();
-        for (int j = 0; j < class_n; ++j) {
-          const float x = data[i].x - centroids[j].x;
-          const float y = data[i].y - centroids[j].y;
-          const float dist = x*x + y*y;
-          if (dist < min_dist) {
-            table[i] = j;
-            min_dist = dist;
-          }
-        }
-      }
-
-      // Update step
-      memset(centroids, 0, class_n * sizeof *centroids);
-      vector<int> count(class_n);
-
-      // Calculate mean value
-      for (int i = 0; i < data_n; ++i) {
-        centroids[table[i]].x += data[i].x;
-        centroids[table[i]].y += data[i].y;
-        ++count[table[i]];
-      }
-
-      for (int i = 0; i < class_n; ++i) {
-        centroids[i].x /= count[i];
-        centroids[i].y /= count[i];
-      }
-    }
-  }
-}
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 #define DATA_DIM 2
 #define DEFAULT_ITERATION 1024
 
-
-// Read data from file
-unsigned int read_data(FILE* f, float** data_p);
-int timespec_subtract(struct timespec*, struct timespec*, struct timespec*);
+using namespace std;
 
 
-int main(int argc, char** argv)
-{
+namespace {
+  struct point { float x, y; };
+
+  unsigned int read_data(FILE* f, float** data_p);
+  int timespec_subtract(struct timespec*, struct timespec*, struct timespec*);
+  void kmeans(int repeat, int class_n, int data_n, point *centroids, point *data, int *table);
+}
+
+
+//
+// Entry point
+//
+int main(int argc, char** argv) {
   int class_n, data_n, iteration_n;
   float *centroids, *data;
   int* partitioned;
@@ -135,49 +93,88 @@ int main(int argc, char** argv)
 }
 
 
+namespace {
+  int timespec_subtract (struct timespec* result, struct timespec *x, struct timespec *y) {
+    /* Perform the carry for the later subtraction by updating y. */
+    if (x->tv_nsec < y->tv_nsec) {
+      int nsec = (y->tv_nsec - x->tv_nsec) / 1000000000 + 1;
+      y->tv_nsec -= 1000000000 * nsec;
+      y->tv_sec += nsec;
+    }
+    if (x->tv_nsec - y->tv_nsec > 1000000000) {
+      int nsec = (x->tv_nsec - y->tv_nsec) / 1000000000;
+      y->tv_nsec += 1000000000 * nsec;
+      y->tv_sec -= nsec;
+    }
 
-int timespec_subtract (struct timespec* result, struct timespec *x, struct timespec *y)
-{
-  /* Perform the carry for the later subtraction by updating y. */
-  if (x->tv_nsec < y->tv_nsec) {
-    int nsec = (y->tv_nsec - x->tv_nsec) / 1000000000 + 1;
-    y->tv_nsec -= 1000000000 * nsec;
-    y->tv_sec += nsec;
-  }
-  if (x->tv_nsec - y->tv_nsec > 1000000000) {
-    int nsec = (x->tv_nsec - y->tv_nsec) / 1000000000;
-    y->tv_nsec += 1000000000 * nsec;
-    y->tv_sec -= nsec;
-  }
+    /* Compute the time remaining to wait.
+       tv_nsec is certainly positive. */
+    result->tv_sec = x->tv_sec - y->tv_sec;
+    result->tv_nsec = x->tv_nsec - y->tv_nsec;
 
-  /* Compute the time remaining to wait.
-     tv_nsec is certainly positive. */
-  result->tv_sec = x->tv_sec - y->tv_sec;
-  result->tv_nsec = x->tv_nsec - y->tv_nsec;
-
-  /* Return 1 if result is negative. */
-  return x->tv_sec < y->tv_sec;
-}
-
-
-unsigned int read_data(FILE* f, float** data_p)
-{
-  unsigned int size;
-  size_t r;
-
-  r = fread(&size, sizeof(size), 1, f);
-  if (r < 1) {
-    fputs("Error reading file size", stderr);
-    exit(EXIT_FAILURE);
+    /* Return 1 if result is negative. */
+    return x->tv_sec < y->tv_sec;
   }
 
-  *data_p = (float*)malloc(sizeof(float) * DATA_DIM * size);
 
-  r = fread(*data_p, sizeof(float), DATA_DIM*size, f);
-  if (r < DATA_DIM*size) {
-    fputs("Error reading data", stderr);
-    exit(EXIT_FAILURE);
+  unsigned int read_data(FILE* f, float** data_p) {
+    unsigned int size;
+    size_t r;
+
+    r = fread(&size, sizeof(size), 1, f);
+    if (r < 1) {
+      fputs("Error reading file size", stderr);
+      exit(EXIT_FAILURE);
+    }
+
+    *data_p = (float*)malloc(sizeof(float) * DATA_DIM * size);
+
+    r = fread(*data_p, sizeof(float), DATA_DIM*size, f);
+    if (r < DATA_DIM*size) {
+      fputs("Error reading data", stderr);
+      exit(EXIT_FAILURE);
+    }
+
+    return size;
   }
 
-  return size;
+
+  void kmeans(
+      const int repeat,
+      const int class_n, const int data_n,
+      point *const centroids, point *const data, int *const table)
+  {
+    for (int _ = 0; _ < repeat; ++_) {
+      // Assignment step
+      #pragma omp parallel for
+      for (int i = 0; i < data_n; ++i) {
+        auto min_dist = numeric_limits<float>::max();
+        for (int j = 0; j < class_n; ++j) {
+          const float x = data[i].x - centroids[j].x;
+          const float y = data[i].y - centroids[j].y;
+          const float dist = x*x + y*y;
+          if (dist < min_dist) {
+            table[i] = j;
+            min_dist = dist;
+          }
+        }
+      }
+
+      // Update step
+      memset(centroids, 0, class_n * sizeof *centroids);
+      vector<int> count(class_n);
+
+      // Calculate mean value
+      for (int i = 0; i < data_n; ++i) {
+        centroids[table[i]].x += data[i].x;
+        centroids[table[i]].y += data[i].y;
+        ++count[table[i]];
+      }
+
+      for (int i = 0; i < class_n; ++i) {
+        centroids[i].x /= count[i];
+        centroids[i].y /= count[i];
+      }
+    }
+  }
 }
