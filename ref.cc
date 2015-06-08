@@ -22,7 +22,6 @@ namespace {
   {
     for (int _ = 0; _ < repeat; ++_) {
       // Assignment step
-      #pragma omp parallel for
       for (int i = 0; i < data_n; ++i) {
         auto min_dist = numeric_limits<float>::max();
         for (int j = 0; j < class_n; ++j) {
