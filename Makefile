@@ -7,12 +7,12 @@ all: main.cc
 
 run_all:
 	bin/gen centroid 64 tmp/cen
-	bin/gen data 65536 tmp/data 64
+	bin/gen data 262144 tmp/data 64
 	thorq --add --device gpu tmp/bin.ref tmp/cen tmp/data tmp/result.ref
 	thorq --add --device gpu tmp/bin     tmp/cen tmp/data tmp/result
 run: all
 	bin/gen centroid 64 tmp/cen
-	bin/gen data 65536 tmp/data 64
+	bin/gen data 262144 tmp/data 64
 	thorq --add --device gpu tmp/bin     tmp/cen tmp/data tmp/result
 
 test:
