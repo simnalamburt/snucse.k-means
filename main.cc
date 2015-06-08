@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <ctime>
+#include "mpi.h"
 
 #define DATA_DIM 2
 #define DEFAULT_ITERATION 1024
@@ -19,6 +20,26 @@ namespace {
   unique_ptr<float[]> init_data(char *name, uint32_t &size);
   int timespec_subtract(struct timespec*, struct timespec*, struct timespec*);
   void kmeans(int repeat, int class_n, int data_n, point *centroids, point *data, int *table);
+
+  // Dead-Simple MPI wrapper
+  class mpi {
+    int _rank, _size;
+  public:
+    mpi(int &argc, char **&argv) {
+      MPI_Init(&argc, &argv);
+      MPI_Comm_size(MPI_COMM_WORLD, &_size);
+      MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+    }
+
+    ~mpi() {
+      MPI_Finalize();
+    }
+
+    int rank() const { return _rank; }
+    int size() const { return _size; }
+
+    bool root() const { return rank() == 0; }
+  };
 }
 
 
@@ -26,10 +47,14 @@ namespace {
 // Entry point
 //
 int main(int argc, char** argv) {
+  const mpi mpi(argc, argv);
+
   // Check parameters
   if (argc < 4) {
-    fprintf(stderr, "usage: %s <centroid file> <data file> <paritioned result> [<final centroids>] [<iteration number>]\n", argv[0]);
-    exit(EXIT_FAILURE);
+    if (mpi.root()) {
+      fprintf(stderr, "usage: %s <centroid file> <data file> <paritioned result> [<final centroids>] [<iteration number>]\n", argv[0]);
+    }
+    return 1;
   }
 
   // Read initial centroid data and input data
@@ -42,31 +67,34 @@ int main(int argc, char** argv) {
 
   // Start timer
   struct timespec start;
-  clock_gettime(CLOCK_MONOTONIC, &start);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if (mpi.root()) { clock_gettime(CLOCK_MONOTONIC, &start); }
 
   // Run Kmeans algorithm
   kmeans(iteration_n, class_n, data_n, (point*)&centroids[0], (point*)&data[0], &partitioned[0]);
 
   // Stop timer
-  struct timespec end;
-  clock_gettime(CLOCK_MONOTONIC, &end);
+  if (mpi.root()) {
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
-  struct timespec spent;
-  timespec_subtract(&spent, &end, &start);
-  printf("Time spent: %ld.%09ld\n", spent.tv_sec, spent.tv_nsec);
+    struct timespec spent;
+    timespec_subtract(&spent, &end, &start);
+    printf("Time spent: %ld.%09ld\n", spent.tv_sec, spent.tv_nsec);
 
-  // Write classified result
-  FILE *output = fopen(argv[3], "wb");
-  fwrite(&data_n, sizeof(data_n), 1, output);
-  fwrite(&partitioned[0], sizeof(int), data_n, output);
-  fclose(output);
-
-  // Write final centroid data
-  if (argc > 4) {
-    FILE *output = fopen(argv[4], "wb");
-    fwrite(&class_n, sizeof(class_n), 1, output);
-    fwrite(&centroids[0], sizeof(point), class_n, output);
+    // Write classified result
+    FILE *output = fopen(argv[3], "wb");
+    fwrite(&data_n, sizeof(data_n), 1, output);
+    fwrite(&partitioned[0], sizeof(int), data_n, output);
     fclose(output);
+
+    // Write final centroid data
+    if (argc > 4) {
+      FILE *output = fopen(argv[4], "wb");
+      fwrite(&class_n, sizeof(class_n), 1, output);
+      fwrite(&centroids[0], sizeof(point), class_n, output);
+      fclose(output);
+    }
   }
 
   return 0;
@@ -125,8 +153,14 @@ namespace {
       point *const centroids, point *const data, int *const table)
   {
     for (int _ = 0; _ < repeat; ++_) {
+      int size, rank;
+      MPI_Comm_size(MPI_COMM_WORLD, &size);
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      const int begin = data_n*rank/size;
+      const int end = data_n*(rank + 1)/size;
+
       // Assignment step
-      for (int i = 0; i < data_n; ++i) {
+      for (int i = begin; i < end; ++i) {
         auto min_dist = numeric_limits<float>::max();
         for (int j = 0; j < class_n; ++j) {
           const float x = data[i].x - centroids[j].x;
@@ -139,21 +173,28 @@ namespace {
         }
       }
 
+      const int count = end - begin;
+      MPI_Gather(&table[begin], count, MPI_INT, &table[0], count, MPI_INT, 0, MPI_COMM_WORLD);
+
       // Update step
-      memset(centroids, 0, class_n * sizeof *centroids);
-      vector<int> count(class_n);
+      if (rank == 0) {
+        memset(centroids, 0, class_n * sizeof *centroids);
+        vector<int> count(class_n);
 
-      // Calculate mean value
-      for (int i = 0; i < data_n; ++i) {
-        centroids[table[i]].x += data[i].x;
-        centroids[table[i]].y += data[i].y;
-        ++count[table[i]];
+        // Calculate mean value
+        for (int i = 0; i < data_n; ++i) {
+          centroids[table[i]].x += data[i].x;
+          centroids[table[i]].y += data[i].y;
+          ++count[table[i]];
+        }
+
+        for (int i = 0; i < class_n; ++i) {
+          centroids[i].x /= count[i];
+          centroids[i].y /= count[i];
+        }
       }
 
-      for (int i = 0; i < class_n; ++i) {
-        centroids[i].x /= count[i];
-        centroids[i].y /= count[i];
-      }
+      MPI_Bcast(&centroids[0], sizeof(point) * class_n, MPI_BYTE, 0, MPI_COMM_WORLD);
     }
   }
 }
