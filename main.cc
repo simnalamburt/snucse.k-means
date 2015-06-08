@@ -1,8 +1,10 @@
 #include <vector>
+#include <memory>
 #include <limits>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <cstdint>
 #include <ctime>
 
 #define DATA_DIM 2
@@ -14,7 +16,7 @@ using namespace std;
 namespace {
   struct point { float x, y; };
 
-  unsigned int read_data(FILE* f, float** data_p);
+  unique_ptr<float[]> init_data(char *name, uint32_t &size);
   int timespec_subtract(struct timespec*, struct timespec*, struct timespec*);
   void kmeans(int repeat, int class_n, int data_n, point *centroids, point *data, int *table);
 }
@@ -24,76 +26,76 @@ namespace {
 // Entry point
 //
 int main(int argc, char** argv) {
-  int class_n, data_n, iteration_n;
-  float *centroids, *data;
-  int* partitioned;
-  FILE *io_file;
-  struct timespec start, end, spent;
-
   // Check parameters
   if (argc < 4) {
     fprintf(stderr, "usage: %s <centroid file> <data file> <paritioned result> [<final centroids>] [<iteration number>]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 
-  // Read initial centroid data
-  io_file = fopen(argv[1], "rb");
-  if (io_file == NULL) {
-    fprintf(stderr, "File open error %s\n", argv[1]);
-    exit(EXIT_FAILURE);
-  }
-  class_n = read_data(io_file, &centroids);
-  fclose(io_file);
+  // Read initial centroid data and input data
+  size_t iteration_n = argc > 5 ? atoi(argv[5]) : DEFAULT_ITERATION;
 
-  // Read input data
-  io_file = fopen(argv[2], "rb");
-  if (io_file == NULL) {
-    fprintf(stderr, "File open error %s\n", argv[2]);
-    exit(EXIT_FAILURE);
-  }
-  data_n = read_data(io_file, &data);
-  fclose(io_file);
+  uint32_t class_n, data_n;
+  auto centroids = init_data(argv[1], class_n);
+  auto data = init_data(argv[2], data_n);
+  auto partitioned = unique_ptr<int[]>(new int[data_n]);
 
-  iteration_n = argc > 5 ? atoi(argv[5]) : DEFAULT_ITERATION;
-
-
-  partitioned = (int*)malloc(sizeof(int)*data_n);
-
-
+  // Start timer
+  struct timespec start;
   clock_gettime(CLOCK_MONOTONIC, &start);
+
   // Run Kmeans algorithm
-  kmeans(iteration_n, class_n, data_n, (point*)centroids, (point*)data, partitioned);
+  kmeans(iteration_n, class_n, data_n, (point*)&centroids[0], (point*)&data[0], &partitioned[0]);
+
+  // Stop timer
+  struct timespec end;
   clock_gettime(CLOCK_MONOTONIC, &end);
 
+  struct timespec spent;
   timespec_subtract(&spent, &end, &start);
   printf("Time spent: %ld.%09ld\n", spent.tv_sec, spent.tv_nsec);
 
   // Write classified result
-  io_file = fopen(argv[3], "wb");
-  fwrite(&data_n, sizeof(data_n), 1, io_file);
-  fwrite(partitioned, sizeof(int), data_n, io_file);
-  fclose(io_file);
-
+  FILE *output = fopen(argv[3], "wb");
+  fwrite(&data_n, sizeof(data_n), 1, output);
+  fwrite(&partitioned[0], sizeof(int), data_n, output);
+  fclose(output);
 
   // Write final centroid data
   if (argc > 4) {
-    io_file = fopen(argv[4], "wb");
-    fwrite(&class_n, sizeof(class_n), 1, io_file);
-    fwrite(centroids, sizeof(point), class_n, io_file);
-    fclose(io_file);
+    FILE *output = fopen(argv[4], "wb");
+    fwrite(&class_n, sizeof(class_n), 1, output);
+    fwrite(&centroids[0], sizeof(point), class_n, output);
+    fclose(output);
   }
-
-
-  // Free allocated buffers
-  free(centroids);
-  free(data);
-  free(partitioned);
 
   return 0;
 }
 
 
 namespace {
+  unique_ptr<float[]> init_data(char *name, uint32_t &size) {
+    FILE *input = fopen(name, "rb");
+    if (input == NULL) {
+      fprintf(stderr, "File open error %s\n", name);
+      exit(EXIT_FAILURE);
+    }
+
+    if (fread(&size, sizeof(uint32_t), 1, input) < 1) {
+      fputs("Error reading file size", stderr);
+      exit(EXIT_FAILURE);
+    }
+
+    auto mem = unique_ptr<float[]>(new float[size*DATA_DIM]);
+    if (fread(&mem[0], sizeof(float), DATA_DIM*size, input) < DATA_DIM*size) {
+      fputs("Error reading data", stderr);
+      exit(EXIT_FAILURE);
+    }
+
+    fclose(input);
+    return mem;
+  }
+
   int timespec_subtract (struct timespec* result, struct timespec *x, struct timespec *y) {
     /* Perform the carry for the later subtraction by updating y. */
     if (x->tv_nsec < y->tv_nsec) {
@@ -117,28 +119,6 @@ namespace {
   }
 
 
-  unsigned int read_data(FILE* f, float** data_p) {
-    unsigned int size;
-    size_t r;
-
-    r = fread(&size, sizeof(size), 1, f);
-    if (r < 1) {
-      fputs("Error reading file size", stderr);
-      exit(EXIT_FAILURE);
-    }
-
-    *data_p = (float*)malloc(sizeof(float) * DATA_DIM * size);
-
-    r = fread(*data_p, sizeof(float), DATA_DIM*size, f);
-    if (r < DATA_DIM*size) {
-      fputs("Error reading data", stderr);
-      exit(EXIT_FAILURE);
-    }
-
-    return size;
-  }
-
-
   void kmeans(
       const int repeat,
       const int class_n, const int data_n,
@@ -146,7 +126,6 @@ namespace {
   {
     for (int _ = 0; _ < repeat; ++_) {
       // Assignment step
-      #pragma omp parallel for
       for (int i = 0; i < data_n; ++i) {
         auto min_dist = numeric_limits<float>::max();
         for (int j = 0; j < class_n; ++j) {

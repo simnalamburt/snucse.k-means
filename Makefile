@@ -3,7 +3,7 @@ LDFLAGS=-lrt
 
 all: bin
 bin: main.cc
-	g++ $(CPPFLAGS) -fopenmp $^ $(LDFLAGS) -o tmp/bin
+	g++ $(CPPFLAGS) $^ $(LDFLAGS) -o tmp/bin
 run: bin
 	bin/gen centroid 64 tmp/cen
 	bin/gen data 262144 tmp/data 64
